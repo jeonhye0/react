@@ -1,10 +1,27 @@
 pipeline {
-    agent any    
+    agent any
+    tools {
+        dockerTool 'Docker-Windows'
+    }
     stages {
-        stage('Hello') {
+        stage('Build') {
+             agent {
+                docker {
+                    image 'node:22-alpine'
+                    // 호스트의 Docker 소켓을 공유하고, 호스트 유저 권한을 맞춰 권한 문제를 방지합니다.
+                    args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
+                    reuseNode true
+                }
+            }
             steps {
-                echo 'Hello jenkins jeon~'
-                echo 'you are ?'
+                sh '''
+                    ls -la
+                    node -v
+                    npm -v
+                    npm ci 
+                    npm run build
+                    ls -la
+                '''
             }
         }
     }
