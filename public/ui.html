@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style> .noDisplay {display: none} </style>
+</head>
+<body>
+<h1>시작 페이지</h1>
+<div id="loginUI">
+    <h3>로그인 하세요</h3>
+    아이디 <input type="text" id="inputId"> <br>
+    비밀번호<input type="password" id="inputPw"><br>
+    <a href="#" id="loginButton">로그인</a> <a href="#">취소</a>
+
+	<br>
+	<a href="#" id="logoutButton">로그아웃</a> 
+	<h3>회원 정보에 따라 인증 인가?</h3>
+	<a id="home">home</a>
+	<a id="user">user</a>
+	<a id="manager">manager</a>
+	<a id="admin">admin</a>
+
+</div>
+<div id="loginOKUI" ></div>
+<script type="text/javascript">
+    //UI객체
+    let loginButton=document.querySelector("#loginButton");
+	let logoutButton=document.querySelector("#logoutButton");
+    let inputId=document.querySelector("#inputId");
+	let inputPw=document.querySelector("#inputPw");
+
+	//UI페이지
+	let loginUI=document.querySelector("#loginUI");
+	let loginOKUI=document.querySelector("#loginOKUI");
+
+    //재사용할 함수
+    function loginInit(){
+        inputId.value="";
+		inputPw.value="";
+    }
+	function loginOKUIView(){
+		userLink("http://192.168.0.104:8889/api/v1/user");	
+	}
+	document.querySelector("#home").onclick = function(){
+		userLink("http://192.168.0.104:8889/home");	
+	}
+	document.querySelector("#user").onclick = function(){
+		userLink("http://192.168.0.104:8889/api/v1/user");	
+	}
+	document.querySelector("#manager").onclick = function(){
+		userLink("http://192.168.0.104:8889/api/v1/manager");	
+	}
+	document.querySelector("#admin").onclick = function(){
+		userLink("http://192.168.0.104:8889/api/v1/admin");	
+	}
+
+	function userLink(userUrl){
+		//axios.get("http://192.168.0.104:8889/home")
+		axios.get(userUrl, {headers: {
+			 Authorization: sessionStorage.getItem("au")}}
+		)
+		.then(response => {
+			console.dir(response);
+			loginOKUI.innerHTML=response.data.message;
+		}).catch(error =>{
+			//console.log("login = ", error);  //로그인 실패 401
+			loginOKUI.innerHTML="권한이 없습니다. 로그인 정보를 확인";
+		});	
+	}
+    function loginButtonEventHandling(){
+		let loginUrl="http://192.168.0.104:8889/login";
+		axios.post(loginUrl, {username:inputId.value, password:inputPw.value})
+		.then(response => {
+			console.dir(response.headers.authorization);
+			sessionStorage.setItem("au", response.headers.authorization);
+			//localStorage.setItem(response.headers.authorization);
+			//loginUI.style="display: none";
+			//loginOKUI.class="";
+			//회원 전용 데이터 불러오기
+			loginOKUIView();
+		})
+		.catch(error =>{
+			console.log("login = ", error);  //로그인 실패 401
+		});
+        
+        loginInit();
+    }
+	function logoutButtonEventHandling(){
+		sessionStorage.removeItem("au");
+		loginInit();
+	}
+    //이벤트 발생
+    loginButton.addEventListener("click", loginButtonEventHandling);
+	logoutButton.addEventListener("click", logoutButtonEventHandling);
+</script>
+</body>
+</html>
